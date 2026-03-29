@@ -6,19 +6,25 @@
 
 ## 📌 Overview
 
-ReimburseAI is a smart expense reimbursement platform designed to simplify and automate how companies handle employee expenses.
+ReimburseAI is a smart expense reimbursement platform that automates and simplifies how companies manage expenses and approvals.
 
-Traditional reimbursement systems are slow, rigid, and lack transparency. ReimburseAI solves this by introducing a **dynamic rule-based approval engine**, enabling organizations to define flexible workflows tailored to real-world scenarios.
+It introduces a **dynamic rule-based approval engine**, allowing organizations to define flexible workflows instead of rigid approval chains.
 
 ---
 
-## 🎯 Problem Statement
+## 🎬 Demo Video
 
-Companies often struggle with:
+👉 https://youtu.be/Yzhi02iKUIw
 
-* Manual and time-consuming reimbursement processes
-* Lack of transparency in approvals
-* Rigid approval chains that don’t adapt to business needs
+---
+
+## 🎯 Problem
+
+Companies face:
+
+* Slow manual reimbursement processes
+* Lack of transparency
+* Rigid approval workflows
 
 ---
 
@@ -26,80 +32,56 @@ Companies often struggle with:
 
 ReimburseAI provides:
 
-* ⚡ Dynamic approval workflows (sequential, percentage, hybrid)
-* 🧠 Smart rule engine for flexible decision-making
-* 🌍 Multi-currency expense handling
-* 📷 OCR-based receipt scanning (auto data extraction)
-* 👥 Role-based access (Admin, Manager, Employee)
+* Dynamic approval workflows
+* Smart rule engine
+* OCR-based receipt scanning
+* Multi-currency support
+* Role-based access system
+
+---
+
+## 🧠 Core Innovation
+
+ReimburseAI introduces a **dynamic approval engine** that supports:
+
+* Sequential workflows
+* Percentage-based approvals
+* Specific approver rules
+* Hybrid approval logic
+
+This allows companies to model real-world approval scenarios instead of fixed flows.
 
 ---
 
 ## 🔥 Key Features
 
-### 👤 Authentication & Roles
-
-* Secure login/signup system
-* Role-based access control (Admin, Manager, Employee)
-
-### 💸 Expense Management
-
-* Submit expenses with category, description, and date
-* Multi-currency support with real-time conversion
-* Track status (Pending, Approved, Rejected)
-
-### 🔄 Smart Approval Engine
-
-* Sequential approval workflows
-* Percentage-based approvals (e.g., 60% approval required)
-* Specific approver rules (e.g., CFO override)
-* Hybrid rules (combination of both)
-
-### 📷 OCR Integration
-
-* Upload receipts
-* Automatically extract expense details
-
-### ⚙️ Admin Controls
-
-* Manage users and roles
-* Define approval workflows
-* Override approvals
+* 👤 Role-based system (Admin, Manager, Employee)
+* 💸 Expense submission & tracking
+* 🔄 Smart approval workflows
+* 📷 OCR receipt scanning
+* 🌍 Multi-currency support
+* ⚙️ Admin controls & overrides
 
 ---
 
 ## 🛠️ Tech Stack
 
-* **Backend:** Flask, SQLAlchemy
-* **Frontend:** HTML, Bootstrap
-* **Database:** SQLite
-* **Authentication:** Flask-Login
-* **OCR:** Tesseract (pytesseract)
-* **APIs:** Currency conversion & country data
+* Flask
+* SQLAlchemy
+* Bootstrap
+* SQLite
+* Tesseract OCR
 
 ---
 
-## 🚀 Getting Started
-
-### 1️⃣ Clone the repository
-
-```bash
-git clone https://github.com/your-username/reimburseai.git
-cd reimburseai
-```
-
-### 2️⃣ Install dependencies
+## 🚀 How to Run
 
 ```bash
 pip install -r requirements.txt
-```
-
-### 3️⃣ Run the application
-
-```bash
 python app.py
 ```
 
-### 4️⃣ Open in browser
+Open:
 
 ```
 http://127.0.0.1:5000/
@@ -109,36 +91,30 @@ http://127.0.0.1:5000/
 
 ## 🎬 Demo Flow
 
-1. Create a company account (Admin)
-2. Add employees and managers
+1. Create company account
+2. Add users (Admin, Manager, Employee)
 3. Define approval rules
-4. Submit an expense (Employee)
-5. Approve/reject (Manager/Admin)
+4. Submit expense
+5. Approve/reject
 6. Watch dynamic workflow execution
 
 ---
 
-## 🧠 What Makes It Unique?
-
-Unlike traditional systems, ReimburseAI introduces a **configurable approval engine** that adapts workflows dynamically based on business rules, making it closer to real enterprise solutions.
-
----
-
-## 🔮 Future Improvements
+## 🔮 Future Scope
 
 * Analytics dashboard
-* Email/Slack notifications
-* Mobile-friendly UI
-* AI-based fraud detection
+* Notifications (Email/Slack)
+* Mobile support
+* AI fraud detection
 
 ---
 
 ## 👨‍💻 Author
 
-Built with ❤️ for hackathons
+Built for Hackathon 🚀
 
 ---
 
-## 📄 License
+## ⭐ Tagline
 
-MIT License
+“From receipts to approvals — automated intelligently.”
