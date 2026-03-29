@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>{{ current_user.role|title }} Dashboard
+    <small class="text-muted fs-6">— {{ current_user.company.name }} ({{ current_user.company.currency }})</small>
+  </h2>
+</div>
+
+{% if current_user.role == 'admin' %}
+<!-- ── Admin: User Management ── -->
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header fw-bold">👥 Create User</div>
+      <div class="card-body">
+        <form method="POST" action="/create_user">
+          <div class="row g-2">
+            <div class="col-6"><input class="form-control" name="username" placeholder="Username" required></div>
+            <div class="col-6"><input class="form-control" type="password" name="password" placeholder="Password" required></div>
+            <div class="col-6">
+              <select class="form-select" name="role" required>
+                <option value="employee">Employee</option>
+                <option value="manager">Manager</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <select class="form-select" name="manager_id">
+                <option value="">No Manager</option>
+                {% for m in managers %}
+                <option value="{{ m.id }}">{{ m.username }} ({{ m.role }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="is_manager_approver" id="ima" checked>
+                <label class="form-check-label" for="ima">Is Manager Approver (manager must approve first)</label>
+              </div>
+            </div>
+            <div class="col-12"><button class="btn btn-primary w-100">Create User</button></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header fw-bold">⚙️ Conditional Approval Rule</div>
+      <div class="card-body">
+        <form method="POST" action="/set_approval_rule">
+          <div class="mb-2">
+            <select class="form-select" name="rule_type" id="ruleType" onchange="toggleRuleFields()">
+              <option value="sequential" {% if approval_rule and approval_rule.rule_type=='sequential' %}selected{% endif %}>Sequential (default)</option>
+              <option value="percentage" {% if approval_rule and approval_rule.rule_type=='percentage' %}selected{% endif %}>Percentage</option>
+              <option value="specific" {% if approval_rule and approval_rule.rule_type=='specific' %}selected{% endif %}>Specific Approver</option>
+              <option value="hybrid" {% if approval_rule and approval_rule.rule_type=='hybrid' %}selected{% endif %}>Hybrid (% OR Specific)</option>
+            </select>
+          </div>
+          <div id="pctField" class="mb-2">
+            <input class="form-control" name="percentage" type="number" min="1" max="100"
+              placeholder="% of approvers needed (e.g. 60)"
+              value="{{ approval_rule.percentage if approval_rule else 100 }}">
+          </div>
+          <div id="specField" class="mb-2">
+            <select class="form-select" name="specific_approver_id">
+              <option value="">Select specific approver</option>
+              {% for u in all_users %}
+              <option value="{{ u.id }}" {% if approval_rule and approval_rule.specific_approver_id == u.id %}selected{% endif %}>
+                {{ u.username }} ({{ u.role }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn btn-warning w-100">Save Rule</button>
+        </form>
+        {% if approval_rule %}
+        <div class="mt-2 alert alert-info p-2 mb-0">
+          Current: <strong>{{ approval_rule.rule_type }}</strong>
+          {% if approval_rule.rule_type in ['percentage','hybrid'] %} — {{ approval_rule.percentage }}%{% endif %}
+          {% if approval_rule.specific_approver %} — {{ approval_rule.specific_approver.username }}{% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin: User List -->
+<div class="card mb-4">
+  <div class="card-header fw-bold">🧑‍💼 All Users</div>
+  <div class="card-body p-0">
+    <table class="table table-sm mb-0">
+      <thead><tr><th>Username</th><th>Role</th><th>Manager</th><th>Mgr Approver</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for u in all_users %}
+        <tr>
+          <td>{{ u.username }}</td>
+          <td><span class="badge bg-{{ 'danger' if u.role=='admin' else 'primary' if u.role=='manager' else 'secondary' }}">{{ u.role }}</span></td>
+          <td>{{ u.manager.username if u.manager else '—' }}</td>
+          <td>{{ '✓' if u.is_manager_approver else '✗' }}</td>
+          <td>
+            {% if u.id != current_user.id %}
+            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editUser{{ u.id }}">Edit</button>
+            {% endif %}
+          </td>
+        </tr>
+        <!-- Edit Modal -->
+        <div class="modal fade" id="editUser{{ u.id }}" tabindex="-1">
+          <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Edit {{ u.username }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+              <form method="POST" action="/edit_user/{{ u.id }}">
+                <div class="mb-2">
+                  <label>Role</label>
+                  <select class="form-select" name="role">
+                    <option value="employee" {% if u.role=='employee' %}selected{% endif %}>Employee</option>
+                    <option value="manager" {% if u.role=='manager' %}selected{% endif %}>Manager</option>
+                    <option value="admin" {% if u.role=='admin' %}selected{% endif %}>Admin</option>
+                  </select>
+                </div>
+                <div class="mb-2">
+                  <label>Manager</label>
+                  <select class="form-select" name="manager_id">
+                    <option value="">None</option>
+                    {% for m in managers %}
+                    <option value="{{ m.id }}" {% if u.manager_id == m.id %}selected{% endif %}>{{ m.username }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" name="is_manager_approver" {% if u.is_manager_approver %}checked{% endif %}>
+                  <label class="form-check-label">Is Manager Approver</label>
+                </div>
+                <button class="btn btn-primary w-100">Save Changes</button>
+              </form>
+            </div>
+          </div></div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Submit Expense ── -->
+{% if current_user.role in ['employee', 'admin'] %}
+<div class="card mb-4">
+  <div class="card-header fw-bold">💸 Submit New Expense</div>
+  <div class="card-body">
+    <form method="POST" action="/submit_expense">
+      <div class="row g-2">
+        <div class="col-md-3">
+          <label class="form-label">Amount ({{ current_user.company.currency }})</label>
+          <input class="form-control" name="amount" placeholder="Amount" type="number" step="0.01">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Foreign Amount</label>
+          <input class="form-control" name="foreign_amount" placeholder="e.g. 500" type="number" step="0.01">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Currency</label>
+          <input class="form-control" name="foreign_currency" placeholder="e.g. INR" value="USD">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Category</label>
+          <input class="form-control" name="category" placeholder="Travel, Food..." required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Date</label>
+          <input class="form-control" name="date" type="date" required>
+        </div>
+        <div class="col-md-1">
+          <label class="form-label">&nbsp;</label>
+          <button class="btn btn-primary w-100 d-block">Submit</button>
+        </div>
+        <div class="col-12">
+          <textarea class="form-control" name="description" placeholder="Description" rows="2" required></textarea>
+        </div>
+        {% if current_user.role == 'admin' %}
+        <div class="col-12">
+          <label class="form-label text-muted">Custom approver sequence (comma-separated user IDs, optional)</label>
+          <input class="form-control" name="custom_approvers" placeholder="e.g. 2,3,4">
+        </div>
+        {% endif %}
+      </div>
+    </form>
+    <hr>
+    <form method="POST" action="/upload_receipt" enctype="multipart/form-data">
+      <div class="input-group">
+        <input class="form-control" name="receipt" type="file" accept="image/*">
+        <button class="btn btn-success">📷 OCR Receipt</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- ── Expenses Table ── -->
+<div class="card">
+  <div class="card-header fw-bold">📋 Expenses</div>
+  <div class="card-body p-0">
+    <table class="table table-striped mb-0">
+      <thead>
+        <tr>
+          <th>#</th>
+          {% if current_user.role != 'employee' %}<th>Submitted By</th>{% endif %}
+          <th>Amount</th>
+          <th>Category</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th>Approvers</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for exp in expenses %}
+        <tr>
+          <td>{{ exp.id }}</td>
+          {% if current_user.role != 'employee' %}<td>{{ exp.submitter.username if exp.submitter else '?' }}</td>{% endif %}
+          <td>
+            {{ "%.2f"|format(exp.amount) }} {{ current_user.company.currency }}
+            {% if exp.foreign_amount and exp.foreign_currency != current_user.company.currency %}
+            <br><small class="text-muted">{{ "%.2f"|format(exp.foreign_amount) }} {{ exp.foreign_currency }}</small>
+            {% endif %}
+            {% if current_user.role == 'manager' %}
+            <br><small class="text-success fw-bold">In {{ current_user.company.currency }}: {{ "%.2f"|format(exp.amount) }}</small>
+            {% endif %}
+          </td>
+          <td>{{ exp.category }}</td>
+          <td>{{ exp.date.strftime('%d %b %Y') if exp.date else '—' }}</td>
+          <td>
+            {{ exp.description[:50] if exp.description else '' }}{% if exp.description and exp.description|length > 50 %}…{% endif %}
+            {% if exp.comments %}
+            <br><small class="text-muted" style="white-space:pre-line">{{ exp.comments }}</small>
+            {% endif %}
+          </td>
+          <td>
+            {% set approvers = json.loads(exp.approvers or '[]') %}
+            {% set decisions = json.loads(exp.approver_decisions or '{}') %}
+            {% for aid in approvers %}
+              {% set approver_user = all_users|selectattr('id','eq',aid)|first if all_users is defined else none %}
+              <span class="badge bg-{{ 'success' if decisions.get(aid|string)=='approved' else 'danger' if decisions.get(aid|string)=='rejected' else 'warning' if loop.index0 == exp.current_approver_index else 'secondary' }}">
+                {{ approver_user.username if approver_user else aid }}
+              </span>
+            {% endfor %}
+          </td>
+          <td>
+            <span class="badge bg-{{ 'success' if exp.status=='approved' else 'warning' if exp.status=='pending' else 'danger' }}">
+              {{ exp.status|title }}
+            </span>
+          </td>
+          <td>
+            {% set approvers = json.loads(exp.approvers or '[]') %}
+            {% if exp.status == 'pending' %}
+              {% if current_user.id in approvers or current_user.role == 'admin' %}
+              <form method="POST" action="/approve/{{ exp.id }}" class="d-inline">
+                <button class="btn btn-sm btn-success">✓</button>
+              </form>
+              <form method="POST" action="/reject/{{ exp.id }}" class="d-inline ms-1">
+                <input name="comment" class="form-control form-control-sm d-inline" style="width:90px" placeholder="Reason">
+                <button class="btn btn-sm btn-danger">✗</button>
+              </form>
+              {% endif %}
+              {% if current_user.role == 'admin' %}
+              <form method="POST" action="/override/{{ exp.id }}" class="d-inline ms-1">
+                <input type="hidden" name="action" value="approved">
+                <button class="btn btn-sm btn-outline-primary">⚡ Override</button>
+              </form>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-3">No expenses yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function toggleRuleFields() {
+  const t = document.getElementById('ruleType').value;
+  document.getElementById('pctField').style.display = ['percentage','hybrid'].includes(t) ? '' : 'none';
+  document.getElementById('specField').style.display = ['specific','hybrid'].includes(t) ? '' : 'none';
+}
+toggleRuleFields();
+</script>
+
+{% endblock %}
